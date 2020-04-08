@@ -67,9 +67,8 @@ router.post('/register', (req, res) => {
 });
 
 //register user with email invite
-//Do not use - redirects to okta
 router.post('/invite', (req, res) => {
-    //front-end sends technician email, role, full name as name
+    //front-end sends technician email, roleId, full name as name
     //separate full name into first name and last name
     const [first, ...last] = req.body.name.split(' ');
     //convert role id to group id
@@ -100,8 +99,8 @@ router.post('/invite', (req, res) => {
         profile: {
             firstName: first,
             lastName: last,
-            email: req.email,
-            login: req.email
+            email: req.body.email,
+            login: req.body.email
         },
         groupIds: [
             //group id is in url in dashboard when you click on a group.
