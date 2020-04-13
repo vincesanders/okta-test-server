@@ -9,8 +9,8 @@ const { jwtSecret } = require('../utils/secrets');
 
 router.post('/login', (req, res) => {
     const loginInfo = {
-        username: process.env.OKTA_USERNAME,
-        password: process.env.OKTA_PASSWORD,
+        username: req.body.username || process.env.OKTA_USERNAME,
+        password: req.body.password || process.env.OKTA_PASSWORD,
         options: {
             multiOptionalFactorEnroll: true,
             warnBeforePasswordExpired: true
@@ -228,21 +228,61 @@ router.post('/changepasswordandquestion', (req, res) => {
 })
 
 //Do not use - redirects you to okta
+// router.post('/forgotpassword', (req, res) => {
+//     const data = {
+//         username: "laughatothers@gmail.com",
+//         factorType: "EMAIL",
+//         relayState: "https://www.schematiccapture.com/"
+//     }
+//     axios
+//     .post('https://dev-833124.okta.com/api/v1/authn/recovery/password', data)
+//     .then(response => {
+//         res.status(200).json(response.data);
+//     })
+//     .catch(err => {
+//         res.status(500).json({error: err, message: 'Failed to reset password with Okta.', step: 'api/auth/forgotpassword'});
+//     })
+// });
+
+//need some way of retrieving security question
+router.get('/securityquestion/:id', (req, res) => {
+    //get security question from db and send to front-end
+    users.getQuestion(req.params.id)
+    .then(question => {
+        if (Object.keys(question).length === 0) { //No question found
+            res.status(400).json({ errorMessage: 'No security question was found for the user.', step: 'api/auth/securityquestion/:id'});
+        } else {
+            res.status(200).json(question);
+        }
+    })
+    .catch(err => {
+        res.status(500).json({error: err, message: 'Couldn\'t get security question', step: 'api/auth/securityquestion/:id'});
+    })
+});
+
 router.post('/forgotpassword', (req, res) => {
+    //front end must send password (new password), answer to the security question and the useId (okta user id)
     const data = {
-        username: "laughatothers@gmail.com",
-        factorType: "EMAIL",
-        relayState: "https://www.schematiccapture.com/"
+        password: { value: req.body.password },
+        recovery_question: { answer: req.body.answer}
+    }
+    const header = {
+        headers: {
+            Authorization: `SSWS ${process.env.OKTA_REGISTER_TOKEN_TEST}`
+        }
     }
     axios
-    .post('https://dev-833124.okta.com/api/v1/authn/recovery/password', data)
+    .post(
+        `https://dev-833124.okta.com/api/v1/users/${req.body.userId}/credentials/forgot_password?sendEmail=false`,
+        data, 
+        header)
     .then(response => {
         res.status(200).json(response.data);
     })
     .catch(err => {
-        res.status(500).json({error: err, message: 'Failed to reset password with Okta.', step: 'api/auth/forgotpassword'});
+        res.status(500).json({error: err, message: 'Couldn\'t reset the password with Okta.', step: 'api/auth/forgotpassword'});
     })
-});
+})
 
 //returns an array of security questions
 router.get('/questions', (req, res) => {
@@ -354,5 +394,16 @@ module.exports = router;
 //             "href": "https://dev-833124.okta.com/api/v1/users/00u4ymqp0GFLE6XdY4x6/lifecycle/deactivate",
 //             "method": "POST"
 //         }
+//     }
+// }
+//response when resetting password from /forgotpassword
+// {
+//     "password": {},
+//     "recovery_question": {
+//         "question": "Who's a major player in the cowboy scene?"
+//     },
+//     "provider": {
+//         "type": "OKTA",
+//         "name": "OKTA"
 //     }
 // }
