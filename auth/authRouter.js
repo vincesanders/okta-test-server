@@ -225,7 +225,7 @@ router.post('/changepasswordandquestion', (req, res) => {
         console.log(err);
         res.status(500).json({error: err, message: 'Failed to change password and security question.', step: 'api/auth/changepassword'});
     });
-})
+});
 
 //Do not use - redirects you to okta
 // router.post('/forgotpassword', (req, res) => {
@@ -282,7 +282,7 @@ router.post('/forgotpassword', (req, res) => {
     .catch(err => {
         res.status(500).json({error: err, message: 'Couldn\'t reset the password with Okta.', step: 'api/auth/forgotpassword'});
     })
-})
+});
 
 //returns an array of security questions
 router.get('/questions', (req, res) => {
