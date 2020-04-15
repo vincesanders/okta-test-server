@@ -5,6 +5,7 @@ module.exports = {
     get,
     getBy,
     getById,
+    getQuestion,
     remove
 };
 
@@ -23,6 +24,10 @@ function getBy(filter) {
 
 function getById(id) {
     return db('users').where({ id }).first();
+}
+
+function getQuestion(id) {
+    return db.select('question').from('users').where({ id }).first();
 }
 
 function remove(id) {
